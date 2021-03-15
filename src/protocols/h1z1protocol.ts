@@ -484,10 +484,46 @@ const readUnsignedIntWith2bitLengthValue = function (
   };
 };
 
+const writeSignedIntWith2bitLengthValue = function (
+  data: Buffer,
+  offset: number
+) {
+  const result: Buffer = Buffer.alloc(offset)
+  let nbByte = offset/2
+  result.writeUInt8(nbByte); // write number of byte
+  var sign = nbByte & 1;
+  var n = (nbByte >> 1) & 3;
+  for (var i = 0; i < n; i++) {
+    result.writeUInt8(offset + i + 1) << ((i + 1) * 8);
+  }
+  nbByte = nbByte >>> 3;
+  if (sign) {
+    nbByte = -nbByte;
+  }
+  return {
+    value: nbByte,
+    length: n + 1,
+  };
+};
+const writeUnsignedIntWith2bitLengthValue = function (
+  data: Buffer,
+  offset: number
+) {
+  var value = data.readUInt8(offset);
+  var n = value & 3;
+  for (var i = 0; i < n; i++) {
+    value += data.readUInt8(offset + i + 1) << ((i + 1) * 8);
+  }
+  value = value >>> 2;
+  return {
+    value: value,
+    length: n + 1,
+  };
+};
+
 const packUpdatePositionData = function (data: Buffer,flag:number, offset: number) {
   const result:any = Buffer.alloc(offset);
   try {
-    Buffer.prototype.writeUInt8
     result.writeUInt16BE(offset);
     offset += 2;
 
@@ -498,9 +534,9 @@ const packUpdatePositionData = function (data: Buffer,flag:number, offset: numbe
     offset += 1;
 
     if (flag & 1) {
-     /* var v = readUnsignedIntWith2bitLengthValue(data, offset);
+      var v = readUnsignedIntWith2bitLengthValue(data, offset);
       obj["unknown4"] = v.value;
-      offset += v.length;*/
+      offset += v.length;
     }
 
     if (flag & 2) {
