@@ -4385,7 +4385,20 @@ var packets = [
   ["AdminCommand.ItemDefinitionRequest", 0x0a4300, {}],
   ["Command.ItemDefinitionReply", 0x094400, {}],
   ["AdminCommand.ItemDefinitionReply", 0x0a4400, {}],
-  ["Command.ItemDefinitions", 0x094500, {}],
+  [
+    "Command.ItemDefinitions",
+    0x094500,
+    {
+      fields: [
+        {
+          name: "data",
+          type: "custom",
+          parser: parseItemDefinitions,
+          packer: packItemDefinitions,
+        },
+      ],
+    },
+  ],
   ["AdminCommand.ItemDefinitions", 0x0a4500, {}],
   [
     "Command.EnableCompositeEffects",
