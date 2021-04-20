@@ -4392,9 +4392,18 @@ var packets = [
       fields: [
         {
           name: "data",
-          type: "custom",
-          parser: parseItemDefinitions,
-          packer: packItemDefinitions,
+          type: "byteswithlength",
+          fields: [
+            {
+              name: "ItemDefinitions",
+              type: "array",
+              defaultValue: [{}],
+              fields: [
+                { name: "unknown1", type: "byte", defaultValue: 0 },
+                { name: "unknown2", type: "uint16", defaultValue: 0 },
+              ],
+            },
+          ],
         },
       ],
     },

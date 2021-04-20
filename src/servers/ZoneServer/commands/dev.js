@@ -25,6 +25,18 @@ const dev = {
       });
     }, 500);
   },
+  testItems: function (server, client, args) {
+    const ItemDefinitions = [
+      { unknown1: 1, unknown2: 1 },
+      { unknown1: 1, unknown2: 1 },
+      { unknown1: 1, unknown2: 1 },
+      { unknown1: 1, unknown2: 1 },
+    ];
+
+    const packet = {};
+    packet.data = { ItemDefinitions };
+    server.sendData(client, "Command.ItemDefinitions", packet);
+  },
   testVehicle: function (server, client, args) {
     const characterId = generateCharacterId();
     const vehicleData = {
