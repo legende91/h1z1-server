@@ -219,13 +219,15 @@ export class LoginServer extends EventEmitter {
                         serverAddress: serverAddress,
                         serverTicket: client.loginSessionId,
                         encryptionKey: this._cryptoKey,
-                        guid: characterId,
-                        unknownQword2: "0x0",
-                        stationName: "",
-                        characterName: "",
-                        unknownString: "",
+                        encryptionType: 3,
+                        guid: "0x000000002b14b084",
+                        unknownQword1: "",
+                        unknownString1: "",
+                        unknownString2: "",
+                        unknownString3: "",
+                        serverFeatureBit: "0x0000000000000000",
                     },
-                };
+                  };
               } else {
                 charactersLoginInfo = {
                   unknownQword1: "0x0",
@@ -236,13 +238,15 @@ export class LoginServer extends EventEmitter {
                       serverAddress: "127.0.0.1:1117",
                       serverTicket: client.loginSessionId,
                       encryptionKey: this._cryptoKey,
-                      guid: characterId,
-                      unknownQword2: "0x0",
-                      stationName: "",
-                      characterName: "",
-                      unknownString: "",
+                      encryptionType: 3,
+                      guid: "0x000000002b14b084",
+                      unknownQword1: "",
+                      unknownString1: "",
+                      unknownString2: "",
+                      unknownString3: "",
+                      serverFeatureBit: "0x0000000000000000",
                   },
-              };
+                };
               }
               debug(charactersLoginInfo);
               data = this._protocol.pack(

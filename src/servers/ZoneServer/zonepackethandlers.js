@@ -143,12 +143,13 @@ const packetHandlers = {
       gameTime: (server.getServerTime() & 0xffffffff) >>> 0,
     });
     server.sendGameTimeSync(client);
+    
     client.character.currentLoadoutId = 3;
     server.sendData(client, "Loadout.SetCurrentLoadout", {
       guid: client.character.guid,
       loadoutId: client.character.currentLoadoutId,
     });
-
+    
     server.sendData(client, "ZoneDoneSendingInitialData", {});
 
     const commands = [

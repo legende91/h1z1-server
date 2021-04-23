@@ -476,11 +476,13 @@ export class ZoneServer extends EventEmitter {
       zoneName: "Z1",
       unknownBoolean1: true,
       zoneType: 4,
-      skyData: weather,
+      //skyData: weather,
+      skyData: {},
       zoneId1: 3905829720,
       zoneId2: 3905829720,
       nameId: 7699,
-      unknownBoolean7: true,
+      unknownBoolean2: true,
+      unknownBoolean3: true,
     };
     this.sendData(client, "SendZoneDetails", SendZoneDetails_packet);
   }
