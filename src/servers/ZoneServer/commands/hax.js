@@ -140,9 +140,9 @@ const hax = {
       transientId: transientId,
       modelId: choosenModelId,
       position: client.character.state.position,
-      array5: [{ unknown1: 0 }],
-      array17: [{ unknown1: 0 }],
-      array18: [{ unknown1: 0 }],
+      //array5: [{ unknown1: 0 }],
+      //array17: [{ unknown1: 0 }],
+      //array18: [{ unknown1: 0 }],
     };
     server.sendData(client, "AddLightweightNpc", npc);
     server._npcs[characterId] = npc; // save npc
