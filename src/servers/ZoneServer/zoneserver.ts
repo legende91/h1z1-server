@@ -318,6 +318,7 @@ export class ZoneServer extends EventEmitter {
       require.resolve("../../../data/sendself.json") // reload json
     ];
     const self = require("../../../data/sendself.json"); // dummy self
+    /*
     if (
       String(client.character.characterId).toUpperCase() ===
       String(getCharacterId(99)).toUpperCase()
@@ -336,6 +337,7 @@ export class ZoneServer extends EventEmitter {
       self.data.identity.characterFirstName = "Z";
       self.data.actorModelId = 9001;
     }
+    */
     const {
       data: { identity },
     } = self;

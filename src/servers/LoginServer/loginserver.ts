@@ -111,7 +111,7 @@ export class LoginServer extends EventEmitter {
               let CharactersInfo;
               if (this._soloMode) {
                 const SinglePlayerCharacter = require("../../../data/single_player_character.json");
-
+                /*
                 const cowboy = _.cloneDeep(SinglePlayerCharacter); // for fun 🤠
                 cowboy.characterId = getCharacterId(99);
                 cowboy.payload.name = "Cowboy";
@@ -119,11 +119,11 @@ export class LoginServer extends EventEmitter {
                 const zombie = _.cloneDeep(SinglePlayerCharacter); // for fun X2
                 zombie.characterId = getCharacterId(100);
                 zombie.payload.name = "Z (only third person)";
-
+                */
                 CharactersInfo = {
                   status: 1,
                   canBypassServerLock: true,
-                  characters: [SinglePlayerCharacter, cowboy, zombie],
+                  characters: [SinglePlayerCharacter/*, cowboy, zombie*/],
                 };
               } else {
                 const charactersQuery = { ownerId: client.loginSessionId };
