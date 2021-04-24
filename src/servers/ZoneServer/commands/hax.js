@@ -120,7 +120,7 @@ const hax = {
 
       server.sendData(
         client,
-        "PlayerUpdate.AddLightweightVehicle",
+        "AddLightweightVehicle",
         vehicleData
       );
     }
@@ -144,7 +144,7 @@ const hax = {
       array17: [{ unknown1: 0 }],
       array18: [{ unknown1: 0 }],
     };
-    server.sendData(client, "PlayerUpdate.AddLightweightNpc", npc);
+    server.sendData(client, "AddLightweightNpc", npc);
     server._npcs[characterId] = npc; // save npc
   },
   sonic: function (server, client, args) {

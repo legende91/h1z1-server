@@ -463,7 +463,7 @@ export class ZoneServer extends EventEmitter {
 
   spawnAllNpc(client: Client) {
     for (let npc in this._npcs) {
-      this.sendData(client, "PlayerUpdate.AddLightweightNpc", this._npcs[npc]);
+      this.sendData(client, "AddLightweightNpc", this._npcs[npc]);
     }
   }
 
