@@ -140,12 +140,33 @@ const hax = {
       transientId: transientId,
       modelId: choosenModelId,
       position: client.character.state.position,
-      //array5: [{ unknown1: 0 }],
+      // unknownByteArray1: [unknownByte1 = 0, unknownByte2 = 0, unknownByte3 = 0],
       //array17: [{ unknown1: 0 }],
       //array18: [{ unknown1: 0 }],
     };
     server.sendData(client, "AddLightweightNpc", npc);
     server._npcs[characterId] = npc; // save npc
+  },
+  spawnPcModel: function (server, client, args) {
+    const guid = server.generateGuid();
+    const transientId = server.getTransientId(client, guid);
+    debug("spawnPcModel called");
+    if (!args[1]) {
+      server.sendChatText(client, "[ERROR] You need to specify a model id !");
+      return;
+    }
+    //const choosenModelId = Number(args[1]);
+    const characterId = generateCharacterId();
+    const pc = {
+      characterId: characterId,
+      guid: guid,
+      transientId: transientId,
+      //modelId: choosenModelId,
+      position: client.character.state.position,
+      identity: {}
+    };
+    server.sendData(client, "AddLightweightPc", pc);
+    server._npcs[characterId] = pc; // save npc
   },
   sonic: function (server, client, args) {
     server.sendData(client, "ClientGameSettings", {

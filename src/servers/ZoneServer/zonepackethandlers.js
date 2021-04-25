@@ -34,7 +34,7 @@ const packetHandlers = {
 
     server.sendData(client, "ClientUpdate.UpdateStat", { stats: [] });
 
-    server.sendData(client, "Operation.ClientClearMissions", {});
+    //server.sendData(client, "Operation.ClientClearMissions", {});
 
     server.sendData(client, "ZoneSetting.Data", {
       settings: [
@@ -192,6 +192,10 @@ const packetHandlers = {
   },
   "Chat.Chat": function (server, client, packet) {
     const { channel, message } = packet.data;
+    debug(`****\nCHANNEL: ${channel} MESSAGE: ${message}\n****`)
+    debug("DATA*****\n")
+    debug(packet.data)
+    debug("\n\n\n\n")
     server.sendChat(client, message, channel);
   },
   "Loadout.SelectSlot": function (server, client, packet) {

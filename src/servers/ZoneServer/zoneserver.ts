@@ -93,6 +93,8 @@ export class ZoneServer extends EventEmitter {
           debug(`Receive Data ${[packet.name]}`);
         }
         if (this._packetHandlers[packet.name]) {
+          debug('PACKET.NAME\n\n\n')
+          debug(packet.name+'\n*\n*\n*')
           try {
             this._packetHandlers[packet.name](this, client, packet);
           } catch (e) {
@@ -538,18 +540,46 @@ export class ZoneServer extends EventEmitter {
   sendChat(client: Client, message: string, channel: number) {
     const { character } = client;
     if (!this._soloMode) {
+      /*
       this.sendDataToAll("Chat.Chat", {
-        channel: channel,
-        characterName1: character.name,
+        channel: 0,
+        identity1: { characterFirstName: character.name, unknownQword1: "0x03147cca2a860191"},
+        identity2: { characterFirstName: character.name, unknownQword1: "0x03147cca2a860191"},
+        characterId1: "0x03147cca2a860191",
+        characterId2: "0x03147cca2a860191",
         message: message,
-        color1: 1,
+        color1: 4294967295,
+        position: character.spawnLocation
+      });
+      */
+      this.sendDataToAll("Chat.ChatText", {
+          message: `${client.character.name}: ${message}`,
+          unknownDword1: 0,
+          color: [255, 255, 255, 0],
+          unknownDword2: 13951728,
+          unknownByte3: 0,
+          unknownByte4: 1,
       });
     } else {
+      /*
       this.sendData(client, "Chat.Chat", {
-        channel: channel,
-        characterName1: character.name,
+        channel: 0,
+        identity1: { characterFirstName: character.name, unknownQword1: "0x03147cca2a860191"},
+        identity2: { characterFirstName: character.name, unknownQword1: "0x03147cca2a860191"},
+        characterId1: "0x03147cca2a860191",
+        characterId2: "0x03147cca2a860191",
         message: message,
-        color1: 1,
+        color1: 4294967295,
+        position: character.spawnLocation
+      });
+      */
+      this.sendData(client, "Chat.ChatText", {
+        message: `${client.character.name}: ${message}`,
+        unknownDword1: 0,
+        color: [255, 255, 255, 0],
+        unknownDword2: 13951728,
+        unknownByte3: 0,
+        unknownByte4: 1,
       });
     }
   }
