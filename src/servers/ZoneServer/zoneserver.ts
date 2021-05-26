@@ -31,13 +31,10 @@ const localSpawnList = require("../../../data/sampleData/spawnLocations.json");
 const debugName = "ZoneServer";
 const debug = require("debug")(debugName);
 const localWeatherTemplates = require("../../../data/sampleData/weather.json");
-const Z1_vehicles = require("../../../data/sampleData/vehiculeLocations.json")
-const Z1_items = require("../../../data/zoneData/Z1_items.json");
-const Z1_doors = require("../../../data/zoneData/Z1_doors.json");
-const Z1_npcs = require("../../../data/zoneData/Z1_npcs.json");
-const models = require("../../../data/dataSources/Models.json");
 const stats = require("../../../data/sampleData/stats.json");
-const recipes = require("../../../data/sampleData/recipes.json")
+const recipes = require("../../../data/sampleData/recipes.json");
+const ressources = require("../../../data/dataSources/Resources.json");
+const Z1_POIs = require("../../../data/zoneData/Z1_POIs");
 
 export class ZoneServer extends EventEmitter {
   _gatewayServer: GatewayServer;
@@ -112,7 +109,10 @@ export class ZoneServer extends EventEmitter {
       if (err) {
         console.error(err);
       } else {
-        if (packet.name != "KeepAlive" && packet.name != "PlayerUpdateUpdatePositionClientToZone") {
+        if (
+          packet.name != "KeepAlive" &&
+          packet.name != "PlayerUpdateUpdatePositionClientToZone"
+        ) {
           debug(`Receive Data ${[packet.name]}`);
         }
         if (this._packetHandlers[packet.name]) {
@@ -261,7 +261,7 @@ export class ZoneServer extends EventEmitter {
             .findOne({ worldId: this._worldId })
         ) {
           const worker = new Worker(
-            __dirname + "/../../utils/workers/saveWorld.js",
+            __dirname + "./workers/saveWorld.js",
             {
               workerData: {
                 mongoAddress: this._mongoAddress,
@@ -476,8 +476,26 @@ export class ZoneServer extends EventEmitter {
       client.character.state.position = self.data.position;
       client.character.state.rotation = self.data.rotation;
     }
+    const characterResources: any[] = [];
+    ressources.forEach((ressource: any) => {
+      characterResources.push({
+        resourceType: ressource.RESOURCE_TYPE,
+        resourceData: {
+          subResourceData: {
+            resourceId: ressource.ID,
+            resourceType: ressource.RESOURCE_TYPE,
+            unknownArray1: [],
+          },
+          unknownData2: {
+            max_value: ressource.MAX_VALUE,
+            initial_value: ressource.INITIAL_VALUE,
+          },
+        },
+      });
+    });
     self.data.profiles = this._profiles;
     self.data.stats = stats;
+    self.data.characterResources = characterResources;
     self.data.recipes = recipes;
     this.sendData(client, "SendSelfToClient", self);
   }
@@ -596,7 +614,6 @@ export class ZoneServer extends EventEmitter {
         ) &&
         !client.spawnedEntities.includes(this._npcs[npc])
       ) {
-        setImmediate(() => {
           this.sendData(
             client,
             "PlayerUpdate.AddLightweightNpc",
@@ -604,14 +621,26 @@ export class ZoneServer extends EventEmitter {
             1
           );
           client.spawnedEntities.push(this._npcs[npc]);
-        });
       }
     }
   }
+
+  pointOfInterest(client:Client) {
+    Z1_POIs.forEach((point:any) => {
+        if (isPosInRadius(point.range, client.character.state.position, point.position)) {
+            this.sendData(client, "POIChangeMessage", {
+                messageStringId: point.stringId,
+                id: point.POIid,
+            });
+        }
+    })
+}
+
   worldRoutine(client: Client): void {
     this.spawnObjects(client);
     this.spawnNpcs(client);
     this.removeOutOfDistanceEntities(client);
+    this.pointOfInterest(client)
   }
 
   filterOutOfDistance(element: any, playerPosition: Float32Array): boolean {
@@ -622,7 +651,6 @@ export class ZoneServer extends EventEmitter {
     );
   }
   removeOutOfDistanceEntities(client: Client): void {
-    setImmediate(() => {
       const objectsToRemove = client.spawnedEntities.filter((e) =>
         this.filterOutOfDistance(e, client.character.state.position)
       );
@@ -639,10 +667,10 @@ export class ZoneServer extends EventEmitter {
           1
         );
       });
-    });
   }
 
   spawnObjects(client: Client): void {
+    setImmediate(()=>{
     for (const object in this._objects) {
       if (
         isPosInRadius(
@@ -652,7 +680,6 @@ export class ZoneServer extends EventEmitter {
         ) &&
         !client.spawnedEntities.includes(this._objects[object])
       ) {
-        setImmediate(() => {
           this.sendData(
             client,
             "PlayerUpdate.AddLightweightNpc",
@@ -660,9 +687,9 @@ export class ZoneServer extends EventEmitter {
             1
           );
           client.spawnedEntities.push(this._objects[object]);
-        });
       }
     }
+  })
   }
 
   despawnEntity(characterId: string) {
@@ -712,259 +739,11 @@ export class ZoneServer extends EventEmitter {
   }
 
   createAllObjects(): void {
-    this.createAllDoors();
-    this.createAllItems();
-    this.createAllVehicles();
-    this.createSomeNpcs();
-    debug("All objects created");
-  }
-
-  getRandomVehicleId(){
-    switch (Math.floor(Math.random() * 3)) {
-      case 0:
-      return 7225
-      case 1:
-      return 9301 
-      case 2:
-      return 9258
-      default:
-      return 9258
-    }
-  }
-
-  createAllVehicles() {
-    Z1_vehicles.forEach((vehicle: any) => {
-      this.createEntity(this.getRandomVehicleId(),vehicle.position,vehicle.rotation,this._npcs)
-    });
-    debug("All vehicles created");
-  }
-
-  createSomeNpcs() {
-    // This is only for giving the world some life
-    Z1_npcs.forEach((spawnerType: any) => {
-      const authorizedModelId: number[] = [];
-      switch (spawnerType.actorDefinition) {
-        case "NPCSpawner_ZombieLazy.adr":
-          authorizedModelId.push(9001);
-          authorizedModelId.push(9193);
-          break;
-        case "NPCSpawner_ZombieWalker.adr":
-          authorizedModelId.push(9001);
-          authorizedModelId.push(9193);
-          break;
-        case "NPCSpawner_Deer001.adr":
-          authorizedModelId.push(9002);
-          break;
-        default:
-          break;
-      }
-      if (authorizedModelId.length) {
-        spawnerType.instances.forEach((itemInstance: any) => {
-          this.createEntity(
-            authorizedModelId[
-              Math.floor(Math.random() * authorizedModelId.length)
-            ],
-            itemInstance.position,
-            itemInstance.rotation,
-            this._npcs
-          );
-        });
-      }
-    });
-    debug("All npcs objects created");
-  }
-
-  createAllItems() {
-    Z1_items.forEach((spawnerType: any) => {
-      const authorizedModelId: number[] = [];
-      switch (spawnerType.actorDefinition) {
-        case "ItemSpawner_BattleRoyale_AmmoBox02_12GaShotgun.adr":
-          break;
-        case "ItemSpawner_BattleRoyale_Gear01.adr":
-          break;
-        case "ItemSpawner_BattleRoyale_Weapons01.adr":
-          break;
-        case "ItemSpawner_BattleRoyale_Ammo01.adr":
-          break;
-        case "ItemSpawner_BattleRoyale_Backpack01.adr":
-          break;
-        case "ItemSpawner_BattleRoyale_AmmoBox02_1911.adr":
-          break;
-        case "ItemSpawner_BattleRoyale_FirstAidKit01.adr":
-          break;
-        case "ItemSpawner_BattleRoyale_AmmoBox02_M16A4.adr":
-          break;
-        case "ItemSpawner_BattleRoyale_AmmoBox02_308Rifle.adr":
-          break;
-        case "ItemSpawnerResidential_Tier00.adr":
-          authorizedModelId.push(16);
-          authorizedModelId.push(58);
-          authorizedModelId.push(66);
-          authorizedModelId.push(67);
-          authorizedModelId.push(68);
-          authorizedModelId.push(8020);
-          break;
-        case "ItemSpawnerRare_Tier00.adr":
-          authorizedModelId.push(10);
-          authorizedModelId.push(17);
-          authorizedModelId.push(9204);
-          authorizedModelId.push(9286);
-          authorizedModelId.push(23);
-          break;
-        case "ItemSpawnerIndustrial_Tier00.adr":
-          authorizedModelId.push(70);
-          authorizedModelId.push(71);
-          authorizedModelId.push(72);
-          authorizedModelId.push(73);
-          break;
-        case "ItemSpawnerWorld_Tier00.adr":
-          authorizedModelId.push(16);
-          authorizedModelId.push(58);
-          authorizedModelId.push(66);
-          authorizedModelId.push(67);
-          authorizedModelId.push(68);
-          authorizedModelId.push(8020);
-          break;
-        case "ItemSpawner_Log01.adr":
-          authorizedModelId.push(9043);
-          break;
-        case "ItemSpawnerCommercial_Tier00.adr":
-          authorizedModelId.push(16);
-          authorizedModelId.push(58);
-          authorizedModelId.push(66);
-          authorizedModelId.push(67);
-          authorizedModelId.push(68);
-          authorizedModelId.push(8020);
-          break;
-        case "ItemSpawnerFarm.adr":
-          authorizedModelId.push(15);
-          authorizedModelId.push(27);
-          authorizedModelId.push(9163);
-          authorizedModelId.push(9314);          
-          break;
-        case "ItemSpawner_Weapon_M16A4.adr":
-          authorizedModelId.push(23);
-          break;
-        case "ItemSpawner_AmmoBox02_M16A4.adr":
-          authorizedModelId.push(10);
-          break;
-        case "ItemSpawner_AmmoBox02.adr":
-          authorizedModelId.push(10);
-          break;
-        case "ItemSpawner_Weapon_PumpShotgun01.adr":
-          authorizedModelId.push(9286);
-          break;
-        case "ItemSpawner_AmmoBox02_12GaShotgun.adr":
-          authorizedModelId.push(10);
-          break;
-        case "ItemSpawner_Weapon_Crowbar01.adr":
-          authorizedModelId.push(18);
-          break;
-        case "ItemSpawner_Weapon_CombatKnife01.adr":
-          authorizedModelId.push(21);
-          break;
-        case "ItemSpawner_Weapon_45Auto.adr":
-          authorizedModelId.push(17);
-          break;
-        case "ItemSpawner_AmmoBox02_1911.adr":
-          authorizedModelId.push(10);
-          break;
-        case "ItemSpawner_Weapon_Machete01.adr":
-          authorizedModelId.push(24);
-          break;
-        case "ItemSpawner_Weapon_Bat01.adr":
-          authorizedModelId.push(42);
-          break;
-        case "ItemSpawner_BackpackOnGround001.adr":
-          authorizedModelId.push(9093);
-          break;
-        case "ItemSpawner_FirstAidKit.adr":
-          authorizedModelId.push(9221);
-          break;
-        case "ItemSpawner_Weapon_M24.adr":
-          authorizedModelId.push(9204);
-          break;
-        case "ItemSpawner_GasCan01.adr":
-          authorizedModelId.push(9135);
-          break;
-        case "ItemSpawner_Weapon_Guitar01.adr":
-          authorizedModelId.push(9318);
-          break;
-        case "ItemSpawner_Weapon_WoodAxe01.adr":
-          authorizedModelId.push(27);
-          break;
-        case "ItemSpawner_AmmoBox02_308Rifle.adr":
-          authorizedModelId.push(10);
-          break;
-        case "ItemSpawner_Weapon_FireAxe01.adr":
-          authorizedModelId.push(9325);
-          break;
-        case "ItemSpawner_Weapon_ClawHammer01.adr":
-          authorizedModelId.push(9252);
-          break;
-        case "ItemSpawner_Weapon_Hatchet01.adr":
-          authorizedModelId.push(22);
-          break;
-        case "ItemSpawner_Weapon_Pipe01.adr":
-          authorizedModelId.push(9209);
-          break;
-        case "ItemSpawner_CannedFood.adr":
-          authorizedModelId.push(7);
-          authorizedModelId.push(8020);
-          break;
-        case "ItemSpawner_WaterContainer_Small_Purified.adr":
-          authorizedModelId.push(9159);
-          break;
-        case "ItemSpawner_Clothes_MotorcycleHelmet.adr":
-          authorizedModelId.push(68);
-          break;
-        case "ItemSpawner_Clothes_BaseballCap.adr":
-          authorizedModelId.push(66);
-          break;
-        case "ItemSpawner_Clothes_FoldedShirt.adr":
-          authorizedModelId.push(9249);
-          break;
-        case "ItemSpawner_Weapon_Bat02.adr":
-          authorizedModelId.push(9313);
-          break;
-        case "ItemSpawner_Clothes_Beanie.adr":
-          authorizedModelId.push(67);
-          break;
-        default:
-          break;
-      }
-      if (authorizedModelId.length) {
-        spawnerType.instances.forEach((itemInstance: any) => {
-          this.createEntity(
-            authorizedModelId[
-              Math.floor(Math.random() * authorizedModelId.length)
-            ],
-            itemInstance.position,
-            itemInstance.rotation,
-            this._objects
-          );
-        });
-      }
-    });
-    debug("All items objects created");
-  }
-
-  createAllDoors(): void {
-    Z1_doors.forEach((doorType: any) => {
-      // TODO: add types for Z1_doors
-      const modelId: number = _.find(models, {
-        MODEL_FILE_NAME: doorType.actorDefinition.replace("_Placer", ""),
-      })?.ID;
-      doorType.instances.forEach((doorInstance: any) => {
-        this.createEntity(
-          modelId ? modelId : 9183,
-          doorInstance.position,
-          doorInstance.rotation,
-          this._objects
-        );
-      });
-    });
-    debug("All doors objects created");
+    const { createAllEntities } = require("./workers/createBaseEntities")
+    const { npcs , objects } = createAllEntities()
+    this._npcs = npcs
+    this._objects = objects
+    debug("All entities created");
   }
 
   data(collectionName: string): any {

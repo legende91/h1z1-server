@@ -5,6 +5,8 @@ import { ZoneServer } from "../zoneserver";
 import _ from "lodash";
 const debug = require("debug")("zonepacketHandlers");
 
+let isSonic = false;
+
 const hax: any = {
   time: function (server: ZoneServer, client: Client, args: any[]) {
     const choosenHour: number = Number(args[1]);
@@ -33,22 +35,49 @@ const hax: any = {
   },
   tp: function (server: ZoneServer, client: Client, args: any[]) {
     const choosenSpawnLocation = args[1];
-    let locationPosition:Float32Array;
+    let locationPosition: Float32Array;
     switch (choosenSpawnLocation) {
       case "zimms":
-        locationPosition = new Float32Array([2209.17,47.42,-1011.48,1])
+        locationPosition = new Float32Array([2209.17, 47.42, -1011.48, 1]);
         break;
       case "pv":
-        locationPosition = new Float32Array([-125.55,23.41,-1131.71,1])
+        locationPosition = new Float32Array([-125.55, 23.41, -1131.71, 1]);
         break;
+        case "br":
+          locationPosition = new Float32Array([3824.41,168.19,-4000.00, 1]);
+          break;
+      case "ranchito":
+          locationPosition = new Float32Array([2185.32,42.36,2130.49, 1]);
+          break;	
+      case "drylake":
+          locationPosition = new Float32Array([479.46,109.70,2902.51, 1]);
+          break;
+       case "dam":
+          locationPosition = new Float32Array([-629.49,69.96,1233.49, 1]);
+          break
+       case "cranberry":
+          locationPosition = new Float32Array([-1368.37,71.29,1837.61, 1]);
+          break
+       case "church":
+          locationPosition = new Float32Array([-1928.68,62.77,2880.10, 1]);
+          break
+       case "desoto":
+          locationPosition = new Float32Array([-2793.22,140.77,1035.80, 1]);
+          break	
+       case "toxic":
+          locationPosition = new Float32Array([-3064.68,42.98,-2160.06, 1]);
+          break
+       case "radiotower":
+          locationPosition = new Float32Array([-1499.21,353.98,-840.52, 1]);
+          break
       default:
-        locationPosition = new Float32Array([0,50,0,1])
+        locationPosition = new Float32Array([0, 50, 0, 1]);
         break;
     }
     server.sendData(client, "ClientUpdate.UpdateLocation", {
-      position:locationPosition,
+      position: locationPosition,
     });
-    client.character.state.position = locationPosition
+    client.character.state.position = locationPosition;
     server.worldRoutine(client);
   },
   despawnObjects: function (server: ZoneServer, client: Client, args: any[]) {
@@ -69,6 +98,8 @@ const hax: any = {
           modelId: 7225,
           scale: [1, 1, 1, 1],
           position: client.character.state.position,
+          attachedObject: {},
+          color: {},
           unknownArray1: [],
           array5: [{ unknown1: 0 }],
           array17: [{ unknown1: 0 }],
@@ -96,6 +127,8 @@ const hax: any = {
           transientId: 1,
           modelId: 9301,
           position: client.character.state.position,
+          attachedObject: {},
+          color: {},
           unknownArray1: [],
           array5: [{ unknown1: 0 }],
           array17: [{ unknown1: 0 }],
@@ -143,16 +176,18 @@ const hax: any = {
     server.sendData(client, "ClientGameSettings", {
       unknownQword1: "0x0000000000000000",
       unknownBoolean1: true,
-      timescale: 3.0,
+      timescale: isSonic? 1.0:3.0,
       unknownQword2: "0x0000000000000000",
       unknownFloat1: 0.0,
       unknownFloat2: 12.0,
       unknownFloat3: 110.0,
     });
     server.sendData(client, "Command.RunSpeed", {
-      runSpeed: -100,
+      runSpeed: isSonic? 0:-100,
     });
-    server.sendChatText(client, "Welcome MR.Hedgehog");
+    const messageToMrHedgehog = isSonic? "Goodbye MR.Hedgehog" : "Welcome MR.Hedgehog"
+    server.sendChatText(client, messageToMrHedgehog,true);
+    isSonic = !isSonic
   },
   observer: function (server: ZoneServer, client: Client, args: any[]) {
     server.sendData(client, "PlayerUpdate.RemovePlayer", {
